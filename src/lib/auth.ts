@@ -39,7 +39,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
-    requireEmailVerification: true
+    requireEmailVerification: true,
+    callbackURL: process.env.APP_URL,
   },
   emailVerification: {
     sendOnSignUp: true,
