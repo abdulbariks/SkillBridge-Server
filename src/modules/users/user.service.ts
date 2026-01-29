@@ -5,12 +5,12 @@ const getAllUsers = async ({
 }) => {
   
 
-    const allPost = await prisma.post.findMany({
+    const allUsers = await prisma.user.findMany({
     });
 
    
     return {
-        data: allPost,
+        data: allUsers,
         
     };
 }

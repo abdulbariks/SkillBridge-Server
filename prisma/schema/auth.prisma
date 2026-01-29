@@ -1,17 +1,32 @@
+enum UserRole {
+    STUDENT
+    TUTOR
+    ADMIN
+}
+
+enum UserStatus {
+    BAN
+    UNBAN
+}
+
 model User {
     id            String    @id
     name          String
     email         String
     emailVerified Boolean   @default(false)
     image         String?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
     sessions      Session[]
     accounts      Account[]
 
-    role   String? @default("USER")
-    phone  String?
-    status String? @default("ACTIVE")
+    role         UserRole      @default(STUDENT)
+    phone        String?
+    status       UserStatus?   @default(UNBAN)
+    tutorProfile TutorProfile?
+    bookings     Booking[]     @relation("StudentBookings")
+    reviews      Review[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@unique([email])
     @@map("user")
