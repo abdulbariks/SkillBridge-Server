@@ -36,64 +36,60 @@ const createTutorProfile = async (
 };
 
 // UPDATE TutorProfile
-// export const updateTutorProfile = async (req: Request, res: Response) => {
-//   try {
-//     const { bio, hourlyRate, experience, isVerified, categories } = req.body;
-//     const userId = req.user.id;
-
-//     const profile = await prisma.tutorProfile.update({
-//       where: { userId },
-//       data: {
-//         bio,
-//         hourlyRate,
-//         experience,
-//         isVerified,
-//         categories: categories
-//           ? { set: categories.map((id: string) => ({ id })) } // replace categories
-//           : undefined,
-//       },
-//       include: { categories: true, user: true },
-//     });
-
-//     res.json({ message: "Profile updated", profile });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 
 // GET all tutor profiles
-const getAllTutors = async (req: Request, res: Response) => {
+const getAllTutors = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const tutors = await prisma.tutorProfile.findMany({
-      include: { user: true, categories: true, reviews: true },
+    const tutors = await TutorService.getAllTutors();
+    res.status(200).json({
+      success: true,
+      data: tutors,
     });
-    res.json(tutors);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (error) {
+    next(error);
   }
 };
 
 // GET single tutor detail
-// export const getTutorDetail = async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-//     const tutor = await prisma.tutorProfile.findUnique({
-//       where: { id },
-//       include: { user: true, categories: true, reviews: true, bookings: true },
-//     });
+const getTutorDetail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
 
-//     if (!tutor) return res.status(404).json({ message: "Tutor not found" });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Tutor ID is required",
+      });
+    }
 
-//     res.json(tutor);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
+    const tutor = await TutorService.getTutorDetailById(id);
+
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: "Tutor not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: tutor,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const TutorController = {
   createTutorProfile,
   getAllTutors,
+  getTutorDetail,
 };

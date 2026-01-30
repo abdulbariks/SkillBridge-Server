@@ -12,7 +12,7 @@ const router = Router();
 
 // Public routes
 router.get("/", TutorController.getAllTutors);
-// router.get("/:id", getTutorDetail);
+router.get("/:id", TutorController.getTutorDetail);
 
 // Protected routes (Tutor only)
 router.post(

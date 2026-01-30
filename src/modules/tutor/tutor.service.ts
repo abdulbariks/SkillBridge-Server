@@ -40,6 +40,34 @@ const createTutorProfile = async (
   return profile;
 };
 
+const getAllTutors = async () => {
+  const tutors = await prisma.tutorProfile.findMany({
+    include: {
+      user: true,
+      categories: true,
+      reviews: true,
+    },
+  });
+
+  return tutors;
+};
+
+const getTutorDetailById = async (tutorId: string) => {
+  const tutor = await prisma.tutorProfile.findUnique({
+    where: { id: tutorId },
+    include: {
+      user: true,
+      categories: true,
+      reviews: true,
+      bookings: true,
+    },
+  });
+
+  return tutor;
+};
+
 export const TutorService = {
   createTutorProfile,
+  getAllTutors,
+  getTutorDetailById,
 };
