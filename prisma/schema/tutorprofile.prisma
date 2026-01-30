@@ -3,7 +3,7 @@ model TutorProfile {
     userId     String  @unique
     bio        String?
     hourlyRate Float
-    experience Int // years
+    experience Int
     isVerified Boolean @default(false)
 
     user       User       @relation(fields: [userId], references: [id])
