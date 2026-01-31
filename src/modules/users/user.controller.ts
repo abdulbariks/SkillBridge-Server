@@ -7,7 +7,7 @@ import { UsersService } from "./user.service";
 const getAllUsers = async (req: Request, res: Response) => {
     try {
          const result = await UsersService.getAllUsers({})
-        res.status(201).json(result)
+        res.status(200).json(result)
     } catch (e) {
         res.status(400).json({
             error: "Booking creation failed",

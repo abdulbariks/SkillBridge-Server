@@ -5,22 +5,27 @@ enum UserRole {
 }
 
 enum UserStatus {
-    BAN
-    UNBAN
+    ACTIVE
+    INACTIVE
+    BANNED
 }
 
 model User {
-    id            String    @id
+    id            String  @id @default(cuid())
     name          String
-    email         String
-    emailVerified Boolean   @default(false)
+    email         String  @unique
+    emailVerified Boolean @default(false)
     image         String?
-    sessions      Session[]
-    accounts      Account[]
+    phone         String?
 
-    role         UserRole?     @default(STUDENT)
-    phone        String?
-    status       UserStatus?   @default(UNBAN)
+    role   UserRole?   @default(STUDENT)
+    status UserStatus? @default(ACTIVE)
+
+    // Better Auth relations
+    sessions Session[]
+    accounts Account[]
+
+    // App-specific relations
     tutorProfile TutorProfile?
     bookings     Booking[]     @relation("StudentBookings")
     reviews      Review[]
@@ -28,28 +33,27 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@unique([email])
     @@map("user")
 }
 
 model Session {
-    id        String   @id
+    id        String   @id @default(cuid())
     expiresAt DateTime
-    token     String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    token     String   @unique
     ipAddress String?
     userAgent String?
     userId    String
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([token])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
     @@index([userId])
     @@map("session")
 }
 
 model Account {
-    id                    String    @id
+    id                    String    @id @default(cuid())
     accountId             String
     providerId            String
     userId                String
@@ -61,20 +65,22 @@ model Account {
     refreshTokenExpiresAt DateTime?
     scope                 String?
     password              String?
-    createdAt             DateTime  @default(now())
-    updatedAt             DateTime  @updatedAt
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@index([userId])
     @@map("account")
 }
 
 model Verification {
-    id         String   @id
+    id         String   @id @default(cuid())
     identifier String
     value      String
     expiresAt  DateTime
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@index([identifier])
     @@map("verification")
