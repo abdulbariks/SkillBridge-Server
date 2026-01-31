@@ -9,6 +9,10 @@ const createCategory = async (
   try {
     const { name } = req.body;
 
+    console.log('====================================');
+    console.log(name);
+    console.log('====================================');
+
     if (!name) {
       return res.status(400).json({
         success: false,
