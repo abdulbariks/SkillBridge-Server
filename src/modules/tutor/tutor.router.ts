@@ -1,10 +1,4 @@
 import { Router } from "express";
-// import {
-//   createTutorProfile,
-// //   updateTutorProfile,
-// //   getAllTutors,
-// //   getTutorDetail,
-// } from "./tutor.controller";
 import auth, { UserRole } from "../../middlewares/auth";
 import { TutorController } from "./tutor.controller";
 
