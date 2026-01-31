@@ -14,7 +14,7 @@ const createBooking = async (payload: {
     throw new Error("Start time must be before end time");
   }
 
-  // Optional: check tutor exists
+  // check tutor exists
   const tutor = await prisma.tutorProfile.findUnique({
     where: { id: tutorId },
   });
