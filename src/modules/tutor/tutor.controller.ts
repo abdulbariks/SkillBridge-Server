@@ -17,11 +17,11 @@ const createTutorProfile = async (
       });
     }
 
-    const { bio, hourlyRate, experience, categories } = req.body;
+    const { bio, hourlyRate, experience,available, categories } = req.body;
 
     const result = await TutorService.createTutorProfile(
       user.id as string,
-      { bio, hourlyRate, experience },
+      { bio, hourlyRate,available, experience },
       categories,
     );
 

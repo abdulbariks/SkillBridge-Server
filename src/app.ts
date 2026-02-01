@@ -25,9 +25,9 @@ app.use(express.json());
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use("/v1/api/bookings", bookingRouter);
-app.use("/users", usersRouter);
+app.use("/v1/api/users", usersRouter);
 app.use("/api/tutors", tutorRouter);
-app.use("/api/categories", categoryRouter);
+app.use("/v1/api/categories", categoryRouter);
 app.use("/v1/api/reviews", ReviewRouter);
 
 app.get("/", (req, res) => {

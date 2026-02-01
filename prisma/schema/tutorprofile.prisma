@@ -4,6 +4,7 @@ model TutorProfile {
     bio        String?
     hourlyRate Float
     experience Int
+    available  Boolean @default(true)
     isVerified Boolean @default(false)
 
     user       User       @relation(fields: [userId], references: [id])

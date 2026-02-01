@@ -4,6 +4,7 @@ interface CreateTutorProfileInput {
   bio?: string;
   hourlyRate: number;
   experience: number;
+  available: boolean;
 }
 
 interface UpdateTutorProfileInput {
@@ -11,6 +12,7 @@ interface UpdateTutorProfileInput {
   hourlyRate?: number;
   experience?: number;
   isVerified?: boolean;
+  available?: boolean;
   categories?: string[];
 }
 
@@ -19,7 +21,7 @@ const createTutorProfile = async (
   data: CreateTutorProfileInput,
   categories: string[],
 ) => {
-  const { bio, hourlyRate, experience } = data;
+  const { bio, hourlyRate, available, experience } = data;
 
   const existing = await prisma.tutorProfile.findUnique({
     where: { userId },
@@ -34,6 +36,7 @@ const createTutorProfile = async (
       userId,
       bio: bio ?? null,
       hourlyRate,
+      available,
       experience,
       categories: {
         connect: categories.map((id) => ({ id })),

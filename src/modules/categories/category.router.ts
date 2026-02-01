@@ -3,7 +3,9 @@ import { CategoryController } from "./category.controller";
 
 const router = Router();
 
-// POST /api/categories
+// POST /api/categorie
+
+router.get("/", CategoryController.getCategories);
 router.post("/", CategoryController.createCategory);
 
 export const categoryRouter: Router = router;
