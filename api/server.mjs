@@ -670,8 +670,90 @@ var getAllUsers = async ({}) => {
     data: allUsers
   };
 };
+var getMyProfile = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phone: true,
+      image: true,
+      createdAt: true
+    }
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+};
+var updateMyProfile = async (userId, payload) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...payload.name && { name: payload.name },
+      ...payload.phone && { phone: payload.phone },
+      ...payload.image && { image: payload.image }
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      image: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true
+    }
+  });
+  return updatedUser;
+};
+var deleteMyAccount = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  await prisma.user.delete({
+    where: { id: userId }
+  });
+  return null;
+};
+var adminDeleteUser = async (adminId, targetUserId) => {
+  const admin = await prisma.user.findUnique({
+    where: { id: adminId }
+  });
+  if (!admin || admin.role !== "ADMIN" /* ADMIN */) {
+    throw new Error("Forbidden: Admin access only");
+  }
+  if (adminId === targetUserId) {
+    throw new Error("Admin cannot delete own account here");
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: targetUserId }
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  await prisma.user.delete({
+    where: { id: targetUserId }
+  });
+  return null;
+};
 var UsersService = {
-  getAllUsers
+  getAllUsers,
+  getMyProfile,
+  updateMyProfile,
+  deleteMyAccount,
+  adminDeleteUser
 };
 
 // src/modules/users/user.controller.ts
@@ -686,8 +768,88 @@ var getAllUsers2 = async (req, res) => {
     });
   }
 };
+var getMyProfile2 = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+    const result = await UsersService.getMyProfile(req.user.id);
+    res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+var updateMyProfile2 = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+    const { name, phone, image } = req.body;
+    const result = await UsersService.updateMyProfile(req.user.id, {
+      name,
+      phone,
+      image
+    });
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+var deleteMyAccount2 = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+    await UsersService.deleteMyAccount(req.user.id);
+    res.status(200).json({
+      success: true,
+      message: "Your account has been deleted successfully"
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+var adminDeleteUser2 = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+    const { id } = req.params;
+    await UsersService.adminDeleteUser(req.user.id, id);
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully"
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 var UsersController = {
-  getAllUsers: getAllUsers2
+  getAllUsers: getAllUsers2,
+  getMyProfile: getMyProfile2,
+  updateMyProfile: updateMyProfile2,
+  deleteMyAccount: deleteMyAccount2,
+  adminDeleteUser: adminDeleteUser2
 };
 
 // src/modules/users/user.router.ts
@@ -695,6 +857,26 @@ var router2 = express2.Router();
 router2.get(
   "/",
   UsersController.getAllUsers
+);
+router2.get(
+  "/me",
+  auth_default("ADMIN" /* ADMIN */, "TUTOR" /* TUTOR */, "STUDENT" /* STUDENT */),
+  UsersController.getMyProfile
+);
+router2.patch(
+  "/me",
+  auth_default("ADMIN" /* ADMIN */, "TUTOR" /* TUTOR */, "STUDENT" /* STUDENT */),
+  UsersController.updateMyProfile
+);
+router2.delete(
+  "/me",
+  auth_default("ADMIN" /* ADMIN */, "TUTOR" /* TUTOR */, "STUDENT" /* STUDENT */),
+  UsersController.deleteMyAccount
+);
+router2.delete(
+  "/:id",
+  auth_default("ADMIN" /* ADMIN */),
+  UsersController.adminDeleteUser
 );
 var usersRouter = router2;
 
@@ -710,23 +892,31 @@ var createTutorProfile = async (userId, data, categories) => {
   if (existing) {
     throw new Error("Tutor profile already exists");
   }
-  const profile = await prisma.tutorProfile.create({
-    data: {
-      userId,
-      bio: bio ?? null,
-      hourlyRate,
-      available,
-      experience,
-      categories: {
-        connect: categories.map((id) => ({ id }))
+  const result = await prisma.$transaction(async (tx) => {
+    const profile = await tx.tutorProfile.create({
+      data: {
+        userId,
+        bio: bio ?? null,
+        hourlyRate,
+        available: available ?? true,
+        experience,
+        categories: {
+          connect: categories.map((id) => ({ id }))
+        }
+      },
+      include: {
+        categories: true
       }
-    },
-    include: {
-      user: true,
-      categories: true
-    }
+    });
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        role: "TUTOR" /* TUTOR */
+      }
+    });
+    return profile;
   });
-  return profile;
+  return result;
 };
 var getAllTutors = async () => {
   const tutors = await prisma.tutorProfile.findMany({
@@ -750,39 +940,11 @@ var getTutorDetailById = async (tutorId) => {
   });
   return tutor;
 };
-var updateTutorProfile = async (userId, data) => {
-  const { bio, hourlyRate, experience, isVerified, categories } = data;
-  const existingProfile = await prisma.tutorProfile.findUnique({
-    where: { userId }
-  });
-  if (!existingProfile) {
-    throw new Error("Tutor profile not found");
-  }
-  const updatedProfile = await prisma.tutorProfile.update({
-    where: { userId },
-    data: {
-      bio,
-      hourlyRate,
-      experience,
-      isVerified,
-      ...categories && {
-        categories: {
-          set: categories.map((id) => ({ id }))
-        }
-      }
-    },
-    include: {
-      user: true,
-      categories: true
-    }
-  });
-  return updatedProfile;
-};
 var TutorService = {
   createTutorProfile,
   getAllTutors,
-  getTutorDetailById,
-  updateTutorProfile
+  getTutorDetailById
+  // updateTutorProfile,
 };
 
 // src/modules/tutor/tutor.controller.ts
@@ -794,38 +956,16 @@ var createTutorProfile2 = async (req, res, next) => {
         message: "Unauthorized"
       });
     }
-    const { bio, hourlyRate, experience, available, categories } = req.body;
+    const { bio, hourlyRate, experience, categories } = req.body;
     const result = await TutorService.createTutorProfile(
       user.id,
-      { bio, hourlyRate, available, experience },
+      { bio, hourlyRate, available: true, experience },
       categories
     );
     res.status(201).json({
       success: true,
       message: "Tutor profile created successfully",
       data: result
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-var updateTutorProfile2 = async (req, res, next) => {
-  try {
-    const user = req.user;
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized"
-      });
-    }
-    const profile = await TutorService.updateTutorProfile(
-      user.id,
-      req.body
-    );
-    res.status(200).json({
-      success: true,
-      message: "Tutor profile updated successfully",
-      data: profile
     });
   } catch (error) {
     next(error);
@@ -869,8 +1009,8 @@ var getTutorDetail = async (req, res, next) => {
 var TutorController = {
   createTutorProfile: createTutorProfile2,
   getAllTutors: getAllTutors2,
-  getTutorDetail,
-  updateTutorProfile: updateTutorProfile2
+  getTutorDetail
+  // updateTutorProfile,
 };
 
 // src/modules/tutor/tutor.router.ts
@@ -879,7 +1019,7 @@ router3.get("/", TutorController.getAllTutors);
 router3.get("/:id", TutorController.getTutorDetail);
 router3.post(
   "/",
-  auth_default("STUDENT" /* STUDENT */, "TUTOR" /* TUTOR */),
+  auth_default("STUDENT" /* STUDENT */),
   TutorController.createTutorProfile
 );
 var tutorRouter = router3;
@@ -1050,7 +1190,7 @@ var ReviewRouter = router5;
 var app = express3();
 app.use(
   cors({
-    origin: process.env.FRONTEND_APP_URL || "http://localhost:3001",
+    origin: process.env.FRONTEND_APP_URL || "http://localhost:3000",
     // client side url
     credentials: true
   })
