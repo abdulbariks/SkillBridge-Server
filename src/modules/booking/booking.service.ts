@@ -62,7 +62,8 @@ const getBookings = async (user: any) => {
       },
       include: {
         tutor: {
-          include: { user: true },
+          include: { user: true},
+         
         },
       },
       orderBy: { createdAt: "desc" },

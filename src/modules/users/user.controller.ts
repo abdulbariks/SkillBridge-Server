@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { UsersService } from "./user.service";
 
 
@@ -17,7 +17,34 @@ const getAllUsers = async (req: Request, res: Response) => {
 }
 
 
+const getMyProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const result = await UsersService.getMyProfile(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 export const UsersController = {
-   getAllUsers
+   getAllUsers,
+   getMyProfile
 
 }

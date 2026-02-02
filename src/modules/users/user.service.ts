@@ -15,7 +15,33 @@ const getAllUsers = async ({
     };
 }
 
+const getMyProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phone: true,
+      image: true,
+      createdAt: true,
+      tutorProfile: {
+        include: {
+          categories: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  return user;
+};
 
 export const UsersService = {
-    getAllUsers
+    getAllUsers,
+    getMyProfile
 }
