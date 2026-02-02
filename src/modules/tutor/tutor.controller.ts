@@ -17,11 +17,11 @@ const createTutorProfile = async (
       });
     }
 
-    const { bio, hourlyRate, experience,available, categories } = req.body;
+    const { bio, hourlyRate, experience, categories } = req.body;
 
     const result = await TutorService.createTutorProfile(
       user.id as string,
-      { bio, hourlyRate,available, experience },
+      { bio, hourlyRate, available: true, experience },
       categories,
     );
 
@@ -36,35 +36,35 @@ const createTutorProfile = async (
 };
 
 // UPDATE TutorProfile
-const updateTutorProfile = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const user = req.user;
+// const updateTutorProfile = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const user = req.user;
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+//     if (!user) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Unauthorized",
+//       });
+//     }
 
-    const profile = await TutorService.updateTutorProfile(
-      user.id as string,
-      req.body,
-    );
+//     const profile = await TutorService.updateTutorProfile(
+//       user.id as string,
+//       req.body,
+//     );
 
-    res.status(200).json({
-      success: true,
-      message: "Tutor profile updated successfully",
-      data: profile,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: "Tutor profile updated successfully",
+//       data: profile,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // GET all tutor profiles
 const getAllTutors = async (
@@ -121,5 +121,5 @@ export const TutorController = {
   createTutorProfile,
   getAllTutors,
   getTutorDetail,
-  updateTutorProfile,
+  // updateTutorProfile,
 };

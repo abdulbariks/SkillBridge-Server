@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { UserRole } from "../../middlewares/auth";
 
 interface CreateTutorProfileInput {
   bio?: string;
@@ -31,26 +32,36 @@ const createTutorProfile = async (
     throw new Error("Tutor profile already exists");
   }
 
-  const profile = await prisma.tutorProfile.create({
-    data: {
-      userId,
-      bio: bio ?? null,
-      hourlyRate,
-      available,
-      experience,
-      categories: {
-        connect: categories.map((id) => ({ id })),
+  const result = await prisma.$transaction(async (tx) => {
+    // Create tutor profile
+    const profile = await tx.tutorProfile.create({
+      data: {
+        userId,
+        bio: bio ?? null,
+        hourlyRate,
+        available: available ?? true,
+        experience,
+        categories: {
+          connect: categories.map((id) => ({ id })),
+        },
       },
-    },
-    include: {
-      user: true,
-      categories: true,
-    },
+      include: {
+        categories: true,
+      },
+    });
+    // Update user role → TUTOR
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        role: UserRole.TUTOR,
+      },
+    });
+
+    return profile;
   });
 
-  return profile;
+  return result;
 };
-
 const getAllTutors = async () => {
   const tutors = await prisma.tutorProfile.findMany({
     include: {
@@ -77,46 +88,46 @@ const getTutorDetailById = async (tutorId: string) => {
   return tutor;
 };
 
-const updateTutorProfile = async (
-  userId: string,
-  data: UpdateTutorProfileInput,
-) => {
-  const { bio, hourlyRate, experience, isVerified, categories } = data;
+// const updateTutorProfile = async (
+//   userId: string,
+//   data: UpdateTutorProfileInput,
+// ) => {
+//   const { bio, hourlyRate, experience, isVerified, categories } = data;
 
-  // check if profile exists
-  const existingProfile = await prisma.tutorProfile.findUnique({
-    where: { userId },
-  });
+//   // check if profile exists
+//   const existingProfile = await prisma.tutorProfile.findUnique({
+//     where: { userId },
+//   });
 
-  if (!existingProfile) {
-    throw new Error("Tutor profile not found");
-  }
+//   if (!existingProfile) {
+//     throw new Error("Tutor profile not found");
+//   }
 
-  const updatedProfile = await prisma.tutorProfile.update({
-    where: { userId },
-    data: {
-      bio,
-      hourlyRate,
-      experience,
-      isVerified,
-      ...(categories && {
-        categories: {
-          set: categories.map((id) => ({ id })),
-        },
-      }),
-    },
-    include: {
-      user: true,
-      categories: true,
-    },
-  });
+//   const updatedProfile = await prisma.tutorProfile.update({
+//     where: { userId },
+//     data: {
+//       bio,
+//       hourlyRate,
+//       experience,
+//       isVerified,
+//       ...(categories && {
+//         categories: {
+//           set: categories.map((id) => ({ id })),
+//         },
+//       }),
+//     },
+//     include: {
+//       user: true,
+//       categories: true,
+//     },
+//   });
 
-  return updatedProfile;
-};
+//   return updatedProfile;
+// };
 
 export const TutorService = {
   createTutorProfile,
   getAllTutors,
   getTutorDetailById,
-  updateTutorProfile,
+  // updateTutorProfile,
 };

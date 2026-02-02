@@ -11,7 +11,7 @@ router.get("/:id", TutorController.getTutorDetail);
 // Protected routes (Tutor only)
 router.post(
   "/",
-  auth(UserRole.STUDENT, UserRole.TUTOR),
+  auth(UserRole.STUDENT),
   TutorController.createTutorProfile,
 );
 // router.put("/", updateTutorProfile);
