@@ -24,7 +24,7 @@ export const auth = betterAuth({
     process.env.FRONTEND_APP_URL!, // frontend
   ],
 
-  //  CRITICAL: cookie config for Vercel
+  // cookie config for Vercel
   cookies: {
     session: {
       name: "sb-session",

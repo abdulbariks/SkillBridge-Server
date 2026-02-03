@@ -244,15 +244,33 @@ var transporter = nodemailer.createTransport({
 var auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql"
-    // or "mysql", "postgresql", ...etc
   }),
-  trustedOrigins: [process.env.APP_URL],
+  //  MUST allow frontend origin
+  trustedOrigins: [
+    process.env.APP_URL,
+    // backend
+    process.env.FRONTEND_APP_URL
+    // frontend
+  ],
+  // cookie config for Vercel
+  cookies: {
+    session: {
+      name: "sb-session",
+      options: {
+        httpOnly: true,
+        secure: true,
+        // HTTPS (Vercel)
+        sameSite: "none",
+        // cross-domain
+        path: "/"
+      }
+    }
+  },
   user: {
     additionalFields: {
       role: {
         type: "string",
-        defaultValue: "STUDENT",
-        required: false
+        defaultValue: "STUDENT"
       },
       phone: {
         type: "string",
@@ -260,8 +278,7 @@ var auth = betterAuth({
       },
       status: {
         type: "string",
-        defaultValue: "ACTIVE",
-        required: false
+        defaultValue: "ACTIVE"
       }
     }
   },
