@@ -14,29 +14,43 @@ const transporter = nodemailer.createTransport({
 });
 
 export const auth = betterAuth({
+   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+trustedOrigins: async (request) => {
+  const origin = request?.headers.get("origin");
 
-  //  MUST allow frontend origin
-  trustedOrigins: [
-    process.env.APP_URL!,          // backend
-    process.env.FRONTEND_APP_URL!, // frontend
-  ],
+  const allowedOrigins = [
+    process.env.APP_URL,
+    process.env.BETTER_AUTH_URL,
+    "http://localhost:3000",
+    "http://localhost:4000",
+    "http://localhost:5000",
+    "https://skill-bridge-client-olive.vercel.app",
+    "https://skill-bridge-server-mu.vercel.app",
+  ].filter((o): o is string => Boolean(o));
 
-  // cookie config for Vercel
-  cookies: {
-    session: {
-      name: "sb-session",
-      options: {
-        httpOnly: true,
-        secure: true,        // HTTPS (Vercel)
-        sameSite: "none",    // cross-domain
-        path: "/",
-      },
-    },
-  },
+  // If no origin (server-to-server, Postman, etc.)
+  if (!origin) {
+    return allowedOrigins;
+  }
 
+  // Exact match
+  if (allowedOrigins.includes(origin)) {
+    return [origin];
+  }
+
+  // Allow any Vercel preview domain
+  if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
+    return [origin];
+  }
+
+  return [];
+},
+
+
+basePath: "/api/auth",
   user: {
     additionalFields: {
       role: {
@@ -218,5 +232,19 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
+  },
+    session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
+  advanced: {
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+    disableCSRFCheck: true, // Allow requests without Origin header (Postman, mobile apps, etc.)
   },
 });
