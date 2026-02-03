@@ -15,15 +15,33 @@ const transporter = nodemailer.createTransport({
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "postgresql", // or "mysql", "postgresql", ...etc
+    provider: "postgresql",
   }),
-  trustedOrigins: [process.env.APP_URL!],
+
+  //  MUST allow frontend origin
+  trustedOrigins: [
+    process.env.APP_URL!,          // backend
+    process.env.FRONTEND_APP_URL!, // frontend
+  ],
+
+  //  CRITICAL: cookie config for Vercel
+  cookies: {
+    session: {
+      name: "sb-session",
+      options: {
+        httpOnly: true,
+        secure: true,        // HTTPS (Vercel)
+        sameSite: "none",    // cross-domain
+        path: "/",
+      },
+    },
+  },
+
   user: {
     additionalFields: {
       role: {
         type: "string",
         defaultValue: "STUDENT",
-        required: false,
       },
       phone: {
         type: "string",
@@ -32,17 +50,18 @@ export const auth = betterAuth({
       status: {
         type: "string",
         defaultValue: "ACTIVE",
-        required: false,
       },
     },
   },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
     requireEmailVerification: false,
     callbackURL: process.env.FRONTEND_APP_URL,
   },
-  emailVerification: {
+
+   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url, token }, request) => {
@@ -201,7 +220,3 @@ export const auth = betterAuth({
     },
   },
 });
-
-//
-// GOOGLE_CLIENT_ID
-// GOOGLE_CLIENT_SECRET
