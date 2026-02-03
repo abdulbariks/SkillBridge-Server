@@ -1190,7 +1190,7 @@ var ReviewRouter = router5;
 var app = express3();
 app.use(
   cors({
-    origin: process.env.FRONTEND_APP_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_APP_URL || "https://skill-bridge-client-olive.vercel.app",
     // client side url
     credentials: true
   })

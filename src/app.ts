@@ -15,7 +15,7 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_APP_URL || "http://localhost:3000", // client side url
+    origin: process.env.FRONTEND_APP_URL || "https://skill-bridge-client-olive.vercel.app", // client side url
     credentials: true,
   }),
 );
