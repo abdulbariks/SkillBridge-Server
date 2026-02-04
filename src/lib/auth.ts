@@ -240,6 +240,11 @@ basePath: "/api/auth",
     },
   },
   advanced: {
+    defaultCookieAttributes:{
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
     cookiePrefix: "better-auth",
     useSecureCookies: process.env.NODE_ENV === "production",
     crossSubDomainCookies: {
