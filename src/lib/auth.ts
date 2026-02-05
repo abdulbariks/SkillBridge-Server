@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const auth = betterAuth({
-   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+   baseURL: process.env.BETTER_AUTH_URL,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -22,13 +22,11 @@ trustedOrigins: async (request) => {
   const origin = request?.headers.get("origin");
 
   const allowedOrigins = [
-    process.env.APP_URL,
+    process.env.FRONTEND_APP_URL,
     process.env.BETTER_AUTH_URL,
     "http://localhost:3000",
     "http://localhost:4000",
     "http://localhost:5000",
-    "https://skill-bridge-client-olive.vercel.app",
-    "https://skill-bridge-server-mu.vercel.app",
   ].filter((o): o is string => Boolean(o));
 
   // If no origin (server-to-server, Postman, etc.)
@@ -80,7 +78,7 @@ basePath: "/api/auth",
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url, token }, request) => {
       try {
-        const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+        const verificationUrl = `${process.env.FRONTEND_APP_URL}/verify-email?token=${token}`;
         const info = await transporter.sendMail({
           from: '"Prisma Blog" <prismablog@ph.com>',
           to: user.email,

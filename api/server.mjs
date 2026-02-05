@@ -242,7 +242,7 @@ var transporter = nodemailer.createTransport({
   }
 });
 var auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+  baseURL: process.env.BETTER_AUTH_URL || "https://skill-bridge-server-mu.vercel.app",
   database: prismaAdapter(prisma, {
     provider: "postgresql"
   }),
@@ -1230,12 +1230,12 @@ var ReviewRouter = router5;
 // src/app.ts
 var app = express3();
 var allowedOrigins = [
-  process.env.APP_URL || "http://localhost:5000",
+  process.env.APP_URL || "http://localhost:3000",
   process.env.FRONTEND_APP_URL,
   // Production frontend URL
-  "http://localhost:3000",
+  "http://localhost:5000",
   "http://localhost:4000",
-  "http://localhost:5000"
+  "http://localhost:3000"
 ].filter(Boolean);
 app.use(
   cors({

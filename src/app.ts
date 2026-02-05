@@ -14,8 +14,8 @@ import { ReviewRouter } from "./modules/reviews/reviews.router";
 const app: Application = express();
 
 const allowedOrigins = [
-  process.env.APP_URL || "http://localhost:3000",
   process.env.FRONTEND_APP_URL, // Production frontend URL
+  process.env.BETTER_AUTH_URL,
   "http://localhost:5000",
   "http://localhost:4000",
   "http://localhost:3000",
@@ -45,6 +45,8 @@ app.use(
     exposedHeaders: ["Set-Cookie"],
   }),
 );
+
+console.log("BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL);
 
 app.use(express.json());
 
